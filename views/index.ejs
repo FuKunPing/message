@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>内部小论坛</title>
+  <link rel="stylesheet" href="/css/bootstrap.css">
+  <style>
+    body{
+      padding: 0 15%;
+    }
+    h1{
+      text-align: center;
+    }
+    textarea{
+      resize: none;
+    }
+    hr{
+      border: 1px dashed red;
+    }
+    .showMsg{
+      display: flex;
+      width: 100%;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .out{
+      width: 45%;
+      border: 1px solid red;
+      background-color: rgb(141, 194, 106);
+      border-radius: 5px;
+      margin-top: 15px;
+      padding: 5px 15px 0 15px;
+    }
+    .pager{
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>留言吧</h1>
+  <form action="/message/tijiao" method="post">
+    <div class="form-group">
+      <label for="username">姓名：</label>
+      <input type="text" name="username" id="username" class="form-control">
+    </div>
+    <div class="form-group">
+      <label for="message">留言：</label>
+      <textarea name="message" rows="4" class="form-control" id="message"></textarea>
+    </div>
+    <input type="submit" class="btn btn-info col-xs-offset-11" value="提交">
+  </form>
+  <hr>
+  <ul class="pager">
+    <li>
+      <a href="#" aria-label="Previous">
+        <span aria-hidden="true">&laquo;</span>
+      </a>
+    </li>
+    <li><a href="#">1</a></li>
+    <li><a href="#">2</a></li>
+    <li><a href="#">3</a></li>
+    <li><a href="#">4</a></li>
+    <li><a href="#">5</a></li>
+    <li>
+      <a href="#" aria-label="Next">
+        <span aria-hidden="true">&raquo;</span>
+      </a>
+    </li>
+  </ul>
+  <div class="showMsg">
+    <% for(var i=0;i<msg.length;i++){ %>
+      <div class="out">
+        <div><b><%= msg[i].username %></b>说：</div>
+        <div><%= msg[i].message %></div>
+        <div><%= msg[i].date %></div>
+        <div class="pull-right">
+          <a href="#">编辑</a>
+          &nbsp;&nbsp;&nbsp;
+          <a href="#">删除</a>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>
