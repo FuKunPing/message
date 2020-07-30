@@ -8,6 +8,7 @@
   <style>
     body{
       padding: 0 15%;
+      background: rgb(236, 236, 238);
     }
     h1{
       text-align: center;
@@ -32,9 +33,16 @@
       margin-top: 15px;
       padding: 5px 15px 0 15px;
     }
-    .pager{
+    .pager .up{
       margin: 0;
     }
+    .last{
+      background-color:  rgb(236, 236, 238);
+      border: none;
+    }
+	.pager>.active>a{
+		background: rgb(209, 223, 233);
+	}
   </style>
 </head>
 <body>
@@ -51,36 +59,118 @@
     <input type="submit" class="btn btn-info col-xs-offset-11" value="提交">
   </form>
   <hr>
-  <ul class="pager">
-    <li>
-      <a href="#" aria-label="Previous">
+  <ul class="pager up">
+    <li class="<%= current==1?'disabled':''%>">
+      <a href="/message?page=<%= current==1?1:current-1 %>" aria-label="Previous">
         <span aria-hidden="true">&laquo;</span>
       </a>
-    </li>
-    <li><a href="#">1</a></li>
-    <li><a href="#">2</a></li>
-    <li><a href="#">3</a></li>
-    <li><a href="#">4</a></li>
-    <li><a href="#">5</a></li>
-    <li>
-      <a href="#" aria-label="Next">
+	</li>
+	<%for(var i=0;i<pages;i++){%>
+    <li class="<%= current==i+1?'active':''%>"><a href="/message?page=<%= i+1 %>"><%= i+1 %></a></li>
+    <%}%>
+    <li class="<%= current==pages?'disabled':''%>">
+      <a href="/message?page=<%= current==pages?current:current+1 %>" aria-label="Next">
         <span aria-hidden="true">&raquo;</span>
       </a>
     </li>
   </ul>
+
   <div class="showMsg">
     <% for(var i=0;i<msg.length;i++){ %>
       <div class="out">
-        <div><b><%= msg[i].username %></b>说：</div>
-        <div><%= msg[i].message %></div>
+        <div><b><%= msg[i].username %></b> 说：</div>
+        <div><%= msg[i].message %></div> <!--找的是这个-->
         <div><%= msg[i].date %></div>
         <div class="pull-right">
-          <a href="#">编辑</a>
+          <a href="javascript:;" onclick="modify(this)">编辑</a>
           &nbsp;&nbsp;&nbsp;
-          <a href="#">删除</a>
+          <a href="javascript:;" onclick="del('<%= msg[i]._id%>')">删除</a>
         </div>
       </div>
     <% } %>
+    <div class="out last">
+      <ul class="pager">
+        <li><a href="#">Previous</a></li>
+        <li><a href="#">Next</a></li>
+      </ul>
+    </div>
   </div>
+
+  <script src="/js/jquery.min.js"></script>
+  <script>
+	var oldMsg="";//保存旧的留言信息
+	var canSend=false;//是否可以发送请求
+	var id=""; //被修改留言的id
+
+	//   删除
+    function del(id){
+      var f = confirm("是否要删除该留言？");
+      if(!f){
+        return ;
+      }
+      // 确认删除
+      $.ajax({
+        url: '/message/del?id='+id,
+        success: function(result){
+          if(result.status==1){
+            alert(result.msg);
+            return ;
+          }
+          // 删除成功
+          location.href = '/'
+        }
+      })
+    }
+
+	// 修改第一步：将信息区域替换成文本域
+	function modify(i){
+		var $div=$(i).parent().prev().prev();
+		// 保存旧留言
+		oldMsg = $div.html();
+		$div.html('<textarea name="message" rows="2" class="form-control" onblur="send(this)"></textarea>');
+		// 自动获取焦点
+		$div.find("textarea").focus();
+
+
+	};
+
+	// 修改第二步：发送请求
+	function send(i){
+		var val=$(i).val().trim();//textarea的值
+		if(val==''){ //点击之后如果没修改
+			alert("数据不能为空");
+			// 将原来的数据重新填入
+			$(i).parent().html(oldMsg);
+			// 重置全局变量
+			oldMsg='';
+			return ;
+		}
+		// 修改数据
+		// 取id
+		var id=$(i).parent().parent().find("a:contains('删除')").attr("onclick");//找删除的a的_id
+		// console.log(id);//del('5f22242b2656931570fd874a')
+		id=id.substring(id.indexOf("'")+1,id.lastIndexOf("'"));
+		console.log(id);//5f22242b2656931570fd874a
+		// 发送请求
+		$.ajax({
+			url:"/message/modify",
+			data:{id:id,message:val},
+			method:"post",
+			success:function(result){
+				if(result.status==1){
+					alert(result.msg);
+					return ;
+				}
+				//修改成功,将文本框替换为新的内容
+				$(i).parent().html(val);
+				oldMsg='';//重置
+				alert(result.msg);
+			}
+		})
+	}
+
+  </script>
+
+
 </body>
 </html>
