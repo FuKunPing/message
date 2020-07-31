@@ -8,6 +8,8 @@ const Message=db.Message;
 
 // /message请求
 Route.get("/",function(req,res){
+    // 获取登录信息(用户名)
+    var username=req.session.username;
     // 获取页码
     var page=parseInt(req.query.page);
     if(page<1){
@@ -35,8 +37,8 @@ Route.get("/",function(req,res){
                 return ;
             }
             // 取到数据，传递给页面
-            // 传递的数据：留言信息，总页数，当前页
-            res.render("index",{msg:docs,pages:allPages,current:page});
+            // 传递的数据：留言信息，总页数，当前页,登录的用户名
+            res.render("index",{msg:docs,pages:allPages,current:page,username:username});
         });
 
     });
@@ -46,10 +48,15 @@ Route.get("/",function(req,res){
 
 // post /message/tijiao
 Route.post("/tijiao",function(req,res){
+    // 获取登录的信息
+    var username=req.session.username;
+    // 获取表单发送的信息
     var query=req.body;
+    // 添加留言时间
     query.date=sd.format(new Date());
-    // var username=query.username;
-    // var message=query.message;
+    // 添加留言者的用户名
+    query.username=username;//拿登录的人的用户名去找他的昵称
+    // 存数据到数据库
     db.add(Message,query,function(err){
         if(err){
             console.log(err);
