@@ -31,8 +31,18 @@
       background-color: rgb(196, 221, 236);
       border-radius: 5px;
       margin-top: 15px;
-      padding: 5px 15px 0 15px;
+      padding: 5px 15px 0 0;
+	  display: flex;
     }
+	.img{
+		margin-right: 10px;
+		flex-grow: 0;
+		border-radius: 50%;
+      	overflow: hidden;
+	}
+	.msg{
+		flex-grow: 1;
+	}	
     .pager .up{
       margin: 0;
     }
@@ -43,12 +53,42 @@
 	.pager>.active>a{
 		background: rgb(209, 223, 233);
 	}
+  .user{
+    height: 150px;
+  }
+  .avatar, .nickname{
+    display: inline-block;
+  }
+  .avatar{
+    border-radius: 50%;
+    overflow: hidden;
+    float: left;
+    margin-right: 20px;
+  }
+  .nickname{
+    float: left;
+  }
   </style>
 </head>
 <body>
   <h1>留言吧</h1>
   <form action="/message/tijiao" method="post">
-    <h1><%= username%></h1>
+	<div class="pull-right">
+		<a href="/user/logout">退出登录</a>
+		<a href="/user/center">个人中心</a>
+	</div>
+    <div class="user">
+      <%for(var i=0;i<users.length;i++){%>
+        <%if(username==users[i].username){%>
+      <div class="avatar">
+        <img src="<%= users[i].avatar %>" alt="" height="100px">
+      </div>
+      <div class="nickname">
+          <h2><%= users[i].nickname %></h2>
+      </div>
+        <%}%>      
+      <%}%>
+	</div>
     <!-- <div class="form-group">
       <label for="username">姓名：</label>
       <input type="text" name="username" id="username" class="form-control">
@@ -78,16 +118,27 @@
 
   <div class="showMsg">
     <% for(var i=0;i<msg.length;i++){ %>
+      <% for(var j=0;j<users.length;j++){ %>
+        <%if(msg[i].username==users[j].username){%>
       <div class="out">
-        <div><b><%= msg[i].username %></b> 说：</div>
-        <div><%= msg[i].message %></div> <!--找的是这个-->
-        <div><%= msg[i].date %></div>
-        <div class="pull-right">
-          <a href="javascript:;" onclick="modify(this)">编辑</a>
-          &nbsp;&nbsp;&nbsp;
-          <a href="javascript:;" onclick="del('<%= msg[i]._id%>')">删除</a>
+        <div class="img">
+			<img src="<%= users[j].avatar %>" alt="" width="75px" height="75px">
+		</div>
+        <div class="msg">
+          <div><b><%= users[j].nickname %></b> 说：</div>
+          <div><%= msg[i].message %></div> <!--找的是这个-->
+		  <div><%= msg[i].date %></div>
+		  <%if(username==msg[i].username){%>
+          <div class="pull-right">
+            <a href="javascript:;" onclick="modify(this)">编辑</a>
+            &nbsp;&nbsp;&nbsp;
+            <a href="javascript:;" onclick="del('<%= msg[i]._id%>')">删除</a>
+		  </div>
+		  <%}%>
         </div>
       </div>
+        <% } %>
+      <% } %>
     <% } %>
     <div class="out last">
       <ul class="pager">

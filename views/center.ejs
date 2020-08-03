@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .pull-right{
+            float: right;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>个人中心</h1>
+    <div>
+        <a href="/" class="pull-right">返回首页</a>
+    </div>
+    <div id="center">
+        <div class="left">
+            <img src="<%= user.avatar %>" alt="" width="150px">
+            <h4><a href="">修改头像</a></h4>
+        </div>
+        <div class="right">
+            <p>用户名: <%= user.username%></p>
+            <p>昵称: <span><%= user.nickname %></span>
+                <a href="javascript:;" onclick="change()">修改昵称</a>
+            </p>
+            <p>
+                <a href="/user/changePwd">修改密码</a>
+            </p>
+        </div>
+        
+    </div>
+    <script src="/js/jquery.min.js"></script>
+    <script>
+        var oldNick=''; //旧昵称
+
+        function change(){
+            oldNick=$('span').html();    
+            $('span').html('<input type=text onblur="sendNick()" placeholder="'+oldNick+'">');
+            $('input').focus();
+        }
+
+        // 文本输入框触发onblur事件
+        function sendNick(){
+            var val=$('input').val().trim();
+            if(val==''){
+                alert('昵称不能为空');
+                replace(oldNick);
+                return ;
+            }
+            if(val==oldNick){
+                alert("新昵称和旧昵称相同");
+                replace(oldNick);
+                return ;
+            }
+            // 发送请求，修改新昵称
+            $.ajax({
+                url:"/user/changeNick?nickname="+val,
+                success:function(result){
+                    alert(result.msg);
+                    if(result.status==1){
+                        // 修改失败，还是原来的昵称
+                        replace(oldNick);  
+                    }else{
+                        // 修改成功
+                        replace(val);
+                    }
+                }
+            })
+        }
+
+        // 将文本输入框替换无文字
+        function replace(str){
+            $("span").html(str);
+        }
+
+
+    </script>
+</body>
+</html>

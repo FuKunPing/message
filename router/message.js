@@ -4,6 +4,7 @@ const Route=express.Router();
 const db=require("../model");
 const sd=require("silly-datetime");
 const Message=db.Message;
+const User=db.User;
 
 
 // /message请求
@@ -36,14 +37,29 @@ Route.get("/",function(req,res){
                 res.render("error",{errMsg:"网络错误，稍后再试"});
                 return ;
             }
-            // 取到数据，传递给页面
-            // 传递的数据：留言信息，总页数，当前页,登录的用户名
-            res.render("index",{msg:docs,pages:allPages,current:page,username:username});
+            // 获取所有用户的基本信息
+            // 可以使用自己封装的db.find的方法
+            var fields='username nickname avatar';//查找的属性
+            User.find({},fields,function(err,users){
+                if(err){
+                    console.log(err);
+                    res.render('error',{errMsg:"获取用户信息失败"});
+                    return ;
+                }
+                console.log(users);
+                // 取到数据，传递给页面
+                // 传递的数据：留言信息，总页数，当前页,登录的用户名
+                var data={
+                    msg:docs,
+                    pages:allPages,
+                    current:page,
+                    username:username,
+                    users:users
+                };
+                res.render("index",data);
+            });
         });
-
     });
-
-
 });
 
 // post /message/tijiao

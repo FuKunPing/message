@@ -2,6 +2,7 @@ const { user } = require(".");
 const db=require("../model");
 const User=db.User;
 const router=require("express").Router();
+const { encrypt } =require("../model/myMd5.js");
 
 // /user请求,跳转到登录页面
 router.get('/',function(req,res){
@@ -22,7 +23,7 @@ router.post('/login',function(req,res){
     // console.log(username,password,remember);//张三 123 on
     var filter={
         username:username,
-        password:password
+        password:encrypt(password)
     };
     // 到数据库中查询
     db.find(User,filter,function(err,result){
@@ -77,7 +78,7 @@ router.post("/regist",function(req,res){
     //====用户名重复的验证===
     var data={
         username:username,
-        password:password,
+        password:encrypt(password),
         nickname:username//昵称
     };
     db.add(User,data,function(err){
@@ -91,7 +92,139 @@ router.post("/regist",function(req,res){
         // 跳转到首页
         res.redirect("/");
     })
+});
+
+// get  /user/logout，退出登录
+router.get("/logout",function(req,res){
+    // 退出登录实际上就是删除保存的登录信息
+    req.session.destroy(function(err){
+        if(err){
+            console.log(err);
+            res.render("error",{msg:"退出失败"});
+            return ;
+        }
+        res.redirect('/');
+    });
+});
+
+// get  /user/center  跳转到个人中心页面
+router.get('/center',function(req,res){
+    // 登录的用户名
+    var username=req.session.username;
+    // 根据用户名获取登录用户的信息
+    var filter={username:username};//查询的条件
+    var fields='username nickname avatar';//要获取的属性
+    User.find(filter,fields,function(err,user){
+        if(err){
+            console.log(err);
+            res.render("error",{errMsg:"获取数据错误"})
+        }
+        if(user.length==0){
+            res.render("error",{errMsg:"获取数据错误"});
+            return ;
+        }
+        res.render("center",{user:user[0]});
+    })   
+});
+
+// get /user/changePwd,跳转到修改密码的页面
+router.get('/changePwd',function(req,res){
+    res.render('changePwd');
+});
+
+
+// get /user/checkPwd(ajax),验证原密码是否正确
+router.get('/checkPwd',function(req,res){
+    var username=req.session.username;
+    // 获取输入的密码
+    var password=req.query.password;
+    // 查询的条件： 加密后的密码
+    var filter={
+        username:username,
+        password:encrypt(password)
+    };
+    // 查询密码是否存在
+    db.find(User,filter,function(err,users){
+        if(err){
+            console.log(err);
+            res.send({status:1,msg:"验证失败"});
+            return ;
+        }
+        if(users.length==0){
+            // 没有查到数据，密码错误
+            res.send({status:1,msg:"原密码错误"});
+            return ;
+        }
+        res.send({status:0,msg:"原密码正确"});
+    })
+});
+
+//  post /user/changePwd,修改数据库中的密码
+router.post('/changePwd',function(req,res){
+    // 获取 当前登录的用户的信息
+    var username=req.session.username;
+    // 获取修改的新密码
+    var password=req.body.password;
+    // 修改条件
+    var filter={
+        username:username
+    };
+    // 修改的数据
+    var data={
+        password:encrypt(password)
+    };
+    db.modify(User,filter,data,function(err,result){
+        if(err){
+            console.log(err);
+            res.render('error',{errMsg:"修改失败"});
+            return ;
+        }
+        if(result.nModified==0){
+            // 修改的数据为0条
+            res.render("error",{errMsg:"新密码与旧密码相同"});
+            return ;
+        }
+        // 修改成功后，重新登录
+        req.session.destroy(function(err){
+            if(err){
+                console.log(err);
+                res.render("error",{errMsg:"请退出，重新登录"});
+                return ;
+            }
+            res.redirect('/');
+        })
+        // 修改成功，回到个人中心
+        // res.redirect('/user/center');
+    })
+});
+
+// get /user/changeNick,修改昵称
+router.get('/changeNick',function(req,res){
+    // 获取登录的用户名
+    var username=req.session.username;
+    // 获取新昵称
+    var nickname=req.query.nickname;
+    var filter={
+        username:username
+    }
+    var data={
+        nickname:nickname
+    };
+    // 修改
+    db.modify(User,filter,data,function(err,result){
+        if(err){
+            console.log(err);
+            res.send({status:1,msg:"修改失败"});
+            return ;
+        }
+        if(result.nModified==0){
+            res.send({status:1,msg:"修改失败"});
+            return ;
+        }
+        res.send({status:0,msg:"修改成功"});
+    })
 })
+
 
 
 
