@@ -8,6 +8,8 @@ app.listen(4000);
 app.use(express.urlencoded({extended:true}));
 // 设置根目录
 app.use(express.static("./public"));
+app.use(express.static('./temp'));
+app.use(express.static('./avatars'));
 // 设置视图模板
 app.set("view engine",'ejs');
 
